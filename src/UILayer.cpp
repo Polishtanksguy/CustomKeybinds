@@ -179,46 +179,38 @@ static void onModify(auto& self) {
         GM->setGameVariable("0163", quickKeys);
     }
 
-    bool init(GJBaseGameLayer* layer) {
+        bool init(GJBaseGameLayer* layer) {
         if (!UILayer::init(layer))
             return false;
 
-        // delay by a single frame
-        geode::Loader::get()->queueInMainThread([this, self = Ref(this)] {
+        auto* ui = this;
 
-            this->defineKeybind("jump-p1", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || (this->isPaused() && !this->isEditorPlaytest())) {
+        // delay by a single frame
+        geode::Loader::get()->queueInMainThread([ui, self = Ref(this)] {
+
+            ui->defineKeybind("jump-p1", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || (ui->isPaused() && !ui->isEditorPlaytest())) {
                     return ListenerResult::Propagate;
                 }
-
-                // commenting this out might technically be a cheat but ppl are haters
-                /*if ((down && m_p1Jumping) || (!down && !m_p1Jumping)) {
-                    return ListenerResult::Stop;
-                }*/
 
                 GJBaseGameLayer::get()->queueButton(1, down, false, timestamp);
                 if (down) {
-                    m_p1Jumping = true;
+                    ui->m_p1Jumping = true;
                 } else {
-                    m_p1Jumping = false;
+                    ui->m_p1Jumping = false;
                 }
                 return ListenerResult::Stop;
             });
-            this->defineKeybind("jump-p2", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || (this->isPaused() && !this->isEditorPlaytest())) {
+            ui->defineKeybind("jump-p2", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || (ui->isPaused() && !ui->isEditorPlaytest())) {
                     return ListenerResult::Propagate;
                 }
 
-                // commenting this out might technically be a cheat but ppl are haters
-                /*if ((down && m_p2Jumping) || (!down && !m_p2Jumping)) {
-                    return ListenerResult::Stop;
-                }*/
-
                 GJBaseGameLayer::get()->queueButton(1, down, true, timestamp);
                 if (down) {
-                    m_p2Jumping = true;
+                    ui->m_p2Jumping = true;
                 } else {
-                    m_p2Jumping = false;
+                    ui->m_p2Jumping = false;
                 }
                 return ListenerResult::Stop;
             });
@@ -226,79 +218,78 @@ static void onModify(auto& self) {
             // do not do anything in the editor
             if (!PlayLayer::get()) return;
             
-            this->defineKeybind("place-checkpoint", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || this->isPaused()) {
+            ui->defineKeybind("place-checkpoint", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || ui->isPaused()) {
                     return ListenerResult::Propagate;
                 }
-                this->pressKeyFallthrough(KEY_Z, down, timestamp);
+                ui->pressKeyFallthrough(KEY_Z, down, timestamp);
                 return ListenerResult::Stop;
             });
-            this->defineKeybind("delete-checkpoint", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || this->isPaused()) {
+            ui->defineKeybind("delete-checkpoint", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || ui->isPaused()) {
                     return ListenerResult::Propagate;
                 }
-                this->pressKeyFallthrough(KEY_X, down, timestamp);
+                ui->pressKeyFallthrough(KEY_X, down, timestamp);
                 return ListenerResult::Stop;
             });
-            this->defineKeybind("pause-level", [this](bool down, bool repeat, double timestamp) {
-                if (!repeat && down && this->isCurrentPlayLayer() && !this->isPaused()) {
+            ui->defineKeybind("pause-level", [ui](bool down, bool repeat, double timestamp) {
+                if (!repeat && down && ui->isCurrentPlayLayer() && !ui->isPaused()) {
                     PlayLayer::get()->pauseGame(true);
                     return ListenerResult::Stop;
                 }
                 return ListenerResult::Propagate;
             });
-            this->defineKeybind("restart-level", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || this->isPaused() || !this->isCurrentPlayLayer()) {
+            ui->defineKeybind("restart-level", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || ui->isPaused() || !ui->isCurrentPlayLayer()) {
                     return ListenerResult::Propagate;
                 }
-                this->pressKeyFallthrough(KEY_R, down, false, false, false, false, timestamp);
+                ui->pressKeyFallthrough(KEY_R, down, false, false, false, false, timestamp);
                 return ListenerResult::Stop;
             });
-            this->defineKeybind("full-restart-level", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || this->isPaused() || !this->isCurrentPlayLayer()) {
+            ui->defineKeybind("full-restart-level", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || ui->isPaused() || !ui->isCurrentPlayLayer()) {
                     return ListenerResult::Propagate;
                 }
-                this->pressKeyFallthrough(KEY_R, down, false, true, false, false, timestamp);
+                ui->pressKeyFallthrough(KEY_R, down, false, true, false, false, timestamp);
                 return ListenerResult::Stop;
             });
-            this->defineKeybind("move-left-p1", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || this->isPaused()) {
+            ui->defineKeybind("move-left-p1", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || ui->isPaused()) {
                     return ListenerResult::Propagate;
                 }
-                this->pressKeyFallthrough(KEY_A, down, timestamp);
+                ui->pressKeyFallthrough(KEY_A, down, timestamp);
                 return ListenerResult::Stop;
             });
-            this->defineKeybind("move-right-p1", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || this->isPaused()) {
+            ui->defineKeybind("move-right-p1", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || ui->isPaused()) {
                     return ListenerResult::Propagate;
                 }
-                this->pressKeyFallthrough(KEY_D, down, timestamp);
+                ui->pressKeyFallthrough(KEY_D, down, timestamp);
                 return ListenerResult::Stop;
             });
-            this->defineKeybind("move-left-p2", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || this->isPaused()) {
+            ui->defineKeybind("move-left-p2", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || ui->isPaused()) {
                     return ListenerResult::Propagate;
                 }
-                this->pressKeyFallthrough(KEY_Left, down, timestamp);
+                ui->pressKeyFallthrough(KEY_Left, down, timestamp);
                 return ListenerResult::Stop;
             });
-            this->defineKeybind("move-right-p2", [this](bool down, bool repeat, double timestamp) {
-                if (repeat || this->isPaused()) {
+            ui->defineKeybind("move-right-p2", [ui](bool down, bool repeat, double timestamp) {
+                if (repeat || ui->isPaused()) {
                     return ListenerResult::Propagate;
                 }
-                this->pressKeyFallthrough(KEY_Right, down, timestamp);
+                ui->pressKeyFallthrough(KEY_Right, down, timestamp);
                 return ListenerResult::Stop;
             });
-            this->defineKeybind("toggle-hitboxes", [this](bool down, bool repeat, double timestamp) {
-                if (!repeat && down && this->isCurrentPlayLayer() && !this->isPaused()) {
-                    // This assumes you have quick keys on
-                    this->pressKeyFallthrough(KEY_P, down, timestamp);
+            ui->defineKeybind("toggle-hitboxes", [ui](bool down, bool repeat, double timestamp) {
+                if (!repeat && down && ui->isCurrentPlayLayer() && !ui->isPaused()) {
+                    ui->pressKeyFallthrough(KEY_P, down, timestamp);
                     return ListenerResult::Stop;
                 }
                 return ListenerResult::Propagate;
             });
             // display practice mode button keybinds
-            if (auto menu = this->getChildByID("checkpoint-menu")) {
+            if (auto menu = ui->getChildByID("checkpoint-menu")) {
                 if (auto add = typeinfo_cast<CCMenuItemSpriteExtra*>(menu->getChildByID("add-checkpoint-button"))) {
                     addBindSprites(
                         typeinfo_cast<CCNodeRGBA*>(add->getNormalImage()),

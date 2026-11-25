@@ -177,7 +177,6 @@ static void onModify(auto& self) {
 
         //disable quick keys to restore previous state
         GM->setGameVariable("0163", quickKeys);
-    }
 
         bool init(GJBaseGameLayer* layer) {
         if (!UILayer::init(layer))

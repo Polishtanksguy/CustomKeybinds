@@ -108,8 +108,9 @@ struct $modify(PauseLayer) {
 
 struct $modify(UILayer) {
     static void onModify(auto& self) {
-        (void)self.setHookPriority("UILayer::handleKeypress", Priority::Late);
-    }
+    (void)self.setHookPriority("UILayer::keyDown", Priority::Late);
+    (void)self.setHookPriority("UILayer::keyUp", Priority::Late);
+}
 
     static inline int platformButton() {
         return 1;
@@ -328,10 +329,16 @@ struct $modify(UILayer) {
     }
 
     static inline bool allowKeyDownThrough = false;
-    void handleKeypress(cocos2d::enumKeyCodes key, bool down, double timestamp) {
-        if (key == enumKeyCodes::KEY_Escape || allowKeyDownThrough) {
-            UILayer::handleKeypress(key, down, timestamp);
-            allowKeyDownThrough = false;
-        }
+void keyDown(cocos2d::enumKeyCodes key, double timestamp) {
+    if (key == enumKeyCodes::KEY_Escape || allowKeyDownThrough) {
+        UILayer::keyDown(key, timestamp);
+        allowKeyDownThrough = false;
     }
+}
+void keyUp(cocos2d::enumKeyCodes key, double timestamp) {
+    if (key == enumKeyCodes::KEY_Escape || allowKeyDownThrough) {
+        UILayer::keyUp(key, timestamp);
+        allowKeyDownThrough = false;
+    }
+}
 };

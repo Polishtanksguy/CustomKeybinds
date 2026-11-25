@@ -57,7 +57,6 @@ struct $modify(PauseLayer) {
                     return ListenerResult::Propagate;
                 }
 
-                // Remove any popups (looking at you, confirm exit)
                 CCScene* active = CCDirector::sharedDirector()->getRunningScene();
                 if (auto alert = active->getChildByType<FLAlertLayer>(0)) {
                     return ListenerResult::Propagate;
@@ -106,10 +105,10 @@ struct $modify(PauseLayer) {
     }
 };
 
-static void onModify(auto& self) {
-    (void)self.setHookPriority("UILayer::keyDown", Priority::Late);
-}
-
+struct $modify(UILayer) {
+    static void onModify(auto& self) {
+        (void)self.setHookPriority("UILayer::keyDown", Priority::Late);
+    }
 
     static inline int platformButton() {
         return 1;
@@ -144,14 +143,9 @@ static void onModify(auto& self) {
     }
 
     void pressKeyFallthrough(enumKeyCodes key, bool down, bool shift, bool ctrl, bool alt, bool cmd, double timestamp) {
-        // amazing hack
         if (this->isPaused())
             return;
 
-        // enable quick keys - this mildly diverts from vanilla behavior
-        // because some keybinds are only supposed to work with that option enabled
-        // however we do provide our own way to disable them
-        // so requiring them both to be enabled just ended up confusing users
         auto GM = GameManager::sharedState();
         auto quickKeys = GM->getGameVariable("0163");
         GM->setGameVariable("0163", true);
@@ -175,16 +169,15 @@ static void onModify(auto& self) {
 
         dispatcher->updateModifierKeys(oShift, oCtrl, oAlt, oCmd);
 
-        //disable quick keys to restore previous state
         GM->setGameVariable("0163", quickKeys);
+    }
 
-        bool init(GJBaseGameLayer* layer) {
+    bool init(GJBaseGameLayer* layer) {
         if (!UILayer::init(layer))
             return false;
 
         auto* ui = this;
 
-        // delay by a single frame
         geode::Loader::get()->queueInMainThread([ui, self = Ref(this)] {
 
             ui->defineKeybind("jump-p1", [ui](bool down, bool repeat, double timestamp) {
@@ -214,7 +207,6 @@ static void onModify(auto& self) {
                 return ListenerResult::Stop;
             });
 
-            // do not do anything in the editor
             if (!PlayLayer::get()) return;
             
             ui->defineKeybind("place-checkpoint", [ui](bool down, bool repeat, double timestamp) {
@@ -266,63 +258,57 @@ static void onModify(auto& self) {
                 ui->pressKeyFallthrough(KEY_D, down, timestamp);
                 return ListenerResult::Stop;
             });
-            ui->defineKeybind("move-left-p2", [ui](bool down, bool repeat, double timestamp) {
-                if (repeat || ui->isPaused()) {
-                    return ListenerResult::Propagate;
-                }
-                ui->pressKeyFallthrough(KEY_Left, down, timestamp);
-                return ListenerResult::Stop;
-            });
-            ui->defineKeybind("move-right-p2", [ui](bool down, bool repeat, double timestamp) {
-                if (repeat || ui->isPaused()) {
-                    return ListenerResult::Propagate;
-                }
-                ui->pressKeyFallthrough(KEY_Right, down, timestamp);
-                return ListenerResult::Stop;
-            });
-            ui->defineKeybind("toggle-hitboxes", [ui](bool down, bool repeat, double timestamp) {
-                if (!repeat && down && ui->isCurrentPlayLayer() && !ui->isPaused()) {
-                    ui->pressKeyFallthrough(KEY_P, down, timestamp);
-                    return ListenerResult::Stop;
-                }
-                return ListenerResult::Propagate;
-            });
-            // display practice mode button keybinds
-            if (auto menu = ui->getChildByID("checkpoint-menu")) {
-                if (auto add = typeinfo_cast<CCMenuItemSpriteExtra*>(menu->getChildByID("add-checkpoint-button"))) {
-                    addBindSprites(
-                        typeinfo_cast<CCNodeRGBA*>(add->getNormalImage()),
-                        "place-checkpoint"
-                    );
-                }
-                if (auto rem = typeinfo_cast<CCMenuItemSpriteExtra*>(menu->getChildByID("remove-checkpoint-button"))) {
-                    addBindSprites(
-                        typeinfo_cast<CCNodeRGBA*>(rem->getNormalImage()),
-                        "delete-checkpoint"
-                    );
-                }
-            }
-        });
-
-        return true;
-    }
-
-    void defineKeybind(std::string id, CopyableFunction<bool(bool, bool, double)> callback) {
-        // adding the events to playlayer instead
-        GJBaseGameLayer::get()->addEventListener(
-            KeybindSettingPressedEventV3(Mod::get(), std::move(id)),
-            [callback = std::move(callback)](Keybind const& keybind, bool down, bool repeat, double timestamp) {
-                return callback(down, repeat, timestamp);
-            }
-        );
-    }
-
-    static inline bool allowKeyDownThrough = false;
-void keyDown(cocos2d::enumKeyCodes key, double timestamp) {
-    if (key == enumKeyCodes::KEY_Escape || allowKeyDownThrough) {
-        UILayer::keyDown(key, timestamp);
-        allowKeyDownThrough = false;
-    }
+ui->defineKeybind("move-left-p2", [ui](bool down, bool repeat, double timestamp) {
+if (repeat || ui->isPaused()) {
+return ListenerResult::Propagate;
 }
-
+ui->pressKeyFallthrough(KEY_Left, down, timestamp);
+return ListenerResult::Stop;
+});
+ui->defineKeybind("move-right-p2", [ui](bool down, bool repeat, double timestamp) {
+if (repeat || ui->isPaused()) {
+return ListenerResult::Propagate;
+}
+ui->pressKeyFallthrough(KEY_Right, down, timestamp);
+return ListenerResult::Stop;
+});
+ui->defineKeybind("toggle-hitboxes", [ui](bool down, bool repeat, double timestamp) {
+if (!repeat && down && ui->isCurrentPlayLayer() && !ui->isPaused()) {
+ui->pressKeyFallthrough(KEY_P, down, timestamp);
+return ListenerResult::Stop;
+}
+return ListenerResult::Propagate;
+});
+if (auto menu = ui->getChildByID("checkpoint-menu")) {
+if (auto add = typeinfo_cast<CCMenuItemSpriteExtra*>(menu->getChildByID("add-checkpoint-button"))) {
+addBindSprites(
+typeinfo_cast<CCNodeRGBA*>(add->getNormalImage()),
+"place-checkpoint"
+);
+}
+if (auto rem = typeinfo_cast<CCMenuItemSpriteExtra*>(menu->getChildByID("remove-checkpoint-button"))) {
+addBindSprites(
+typeinfo_cast<CCNodeRGBA*>(rem->getNormalImage()),
+"delete-checkpoint"
+);
+}
+}
+});
+return true;
+}
+void defineKeybind(std::string id, CopyableFunction<bool(bool, bool, double)> callback) {
+GJBaseGameLayer::get()->addEventListener(
+KeybindSettingPressedEventV3(Mod::get(), std::move(id)),
+[callback = std::move(callback)](Keybind const& keybind, bool down, bool repeat, double timestamp) {
+return callback(down, repeat, timestamp);
+}
+);
+}
+static inline bool allowKeyDownThrough = false;
+void keyDown(cocos2d::enumKeyCodes key, double timestamp) {
+if (key == enumKeyCodes::KEY_Escape || allowKeyDownThrough) {
+UILayer::keyDown(key, timestamp);
+allowKeyDownThrough = false;
+}
+}
 };
